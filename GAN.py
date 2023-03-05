@@ -8,9 +8,11 @@ import torchvision.utils as vutils
 
 from PIL import Image
 import matplotlib.pyplot as plt
+import matplotlib.animation as animation
+from IPython.display import HTML
 import numpy as np
 
-dataset = dset.ImageFolder("data/", transform=transforms.Compose([
+dataset = dset.ImageFolder("data/faces", transform=transforms.Compose([
                             transforms.RandomRotation(degrees=180),
                             transforms.Resize(size=64),
                             transforms.CenterCrop(size=64),
@@ -34,12 +36,12 @@ nc = 3
 nz = 100
 ngf = 64
 ndf = 64
-n_epochs = 10
+n_epochs = 1
 lr = 1e-6
 beta1 = 0.5
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
-print(len(dataset))
+#print(len(dataset))
 #dataset[0][0].show()
 
 dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True)
@@ -165,11 +167,12 @@ for epoch in range(n_epochs):
         print('[%d/%d][%d/%d]\tLoss_D: %.4f\tLoss_G: %.4f\tD(x): %.4f\tD(G(z)): %.4f / %.4f'
                   % (epoch, n_epochs, i, len(dataloader),
                      errD.item(), errG.item(), D_x, D_G_z1, D_G_z2))
-
+        
+      # Save losses for graph
       g_loss.append(errG.item())
       d_loss.append(errD.item())
 
-      if epoch == n_epochs-1:
+      if (iters % 500 == 0) or ((epoch == n_epochs-1) and (i == len(dataloader)-1)):
         with torch.no_grad():
           fake = gNet(fixed_noise).detach().cpu()
         img_list.append(vutils.make_grid(fake, padding=2, normalize=True))
@@ -177,6 +180,22 @@ for epoch in range(n_epochs):
       iters += 1
 
 real_batch = next(iter(dataloader))
+
+# Plot loss over time
+plt.figure(figsize=(10,5))
+plt.title("Generator and Discriminator Loss During Training")
+plt.plot(g_loss, label="G")
+plt.plot(d_loss label="D'")
+plt.xlabel("Iterations")
+plt.ylabel("Loss")
+plt.legend()
+plt.show()
+
+# Plot changing fake images over time
+fig = plt.figure(figsize=(8,8))
+plt.axis("off")
+ims = [[plt.imshow(np.transpose(i, (1,2,0)), animated=True)] for i in img_list]
+ani = animation.ArtistAnimation(fig, ims, interval=1000, repeat_delay=1000, blit=True)
 
 # Plot real images
 plt.figure(figsize=(15, 15))
