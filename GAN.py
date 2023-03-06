@@ -13,7 +13,7 @@ from IPython.display import HTML
 import numpy as np
 
 dataset = dset.ImageFolder("data/faces", transform=transforms.Compose([
-                            transforms.RandomRotation(degrees=180),
+                            #transforms.RandomRotation(degrees=180),
                             transforms.Resize(size=64),
                             transforms.CenterCrop(size=64),
                             transforms.ToTensor(),
@@ -36,13 +36,10 @@ nc = 3
 nz = 100
 ngf = 64
 ndf = 64
-n_epochs = 1
+n_epochs = 5
 lr = 1e-6
 beta1 = 0.5
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-
-#print(len(dataset))
-#dataset[0][0].show()
 
 dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
@@ -106,7 +103,6 @@ class Discriminator(nn.Module):
   def forward(self, input):
      return self.main(input)
   
-
 dNet = Discriminator().to(device)
 dNet.apply(weights_init)
 
@@ -119,12 +115,13 @@ fake_label = 0
 img_list = []
 g_loss = []
 d_loss = []
+d_real_acc = []
+d_fake_acc = []
+g_acc = []
 iters = 0
 
 for epoch in range(n_epochs):
    for i, data in enumerate(dataloader, 0):
-      
-      print("Step: ", i)
       
       # Update Discriminator
       dNet.zero_grad()
@@ -172,7 +169,14 @@ for epoch in range(n_epochs):
       g_loss.append(errG.item())
       d_loss.append(errD.item())
 
-      if (iters % 500 == 0) or ((epoch == n_epochs-1) and (i == len(dataloader)-1)):
+      # Save discriminator accuracy for graph
+      d_real_acc.append(D_x)
+      d_fake_acc.append(D_G_z2)
+
+      # Save generator accuracy for graph
+      g_acc.append(1-D_G_z2)
+
+      if (iters % 50 == 0) or ((epoch == n_epochs-1) and (i == len(dataloader)-1)):
         with torch.no_grad():
           fake = gNet(fixed_noise).detach().cpu()
         img_list.append(vutils.make_grid(fake, padding=2, normalize=True))
@@ -181,21 +185,51 @@ for epoch in range(n_epochs):
 
 real_batch = next(iter(dataloader))
 
+# This graph illustrates the generator and discriminator's loss over time during the training process.
+# The discriminator's loss is calculated as the sum of all binary cross-entropy loss for both the
+#   real and fake batches: log(D(x)) + log(1-D(G(z)))
+# The generator's loss is calculated as the binary cross-entropy loss of discriminator's result of the
+#   generator's output (i.e. the generator is trying to fool the discriminator): log(D(G(z)))
+
 # Plot loss over time
 plt.figure(figsize=(10,5))
 plt.title("Generator and Discriminator Loss During Training")
 plt.plot(g_loss, label="G")
-plt.plot(d_loss, label="D'")
+plt.plot(d_loss, label="D")
 plt.xlabel("Iterations")
 plt.ylabel("Loss")
 plt.legend()
 plt.show()
 
+# The discriminator's accuracy is a measurement of how well it predicts if an image belongs to the
+# real dataset or is one of the generator's fake images. Here we plot the accuracy over time for
+# both the real and fake datasets. The generator's accuracy is the compliment of the discriminator's
+# accuracy for the fake dataset.
+
+# Plot discriminator accuracy over time
+plt.figure(figsize=(10,5))
+plt.title("Model Accuracy During Training")
+plt.plot(d_real_acc, label="Discriminator Real")
+plt.plot(d_fake_acc, label="Discriminator Fake")
+plt.plot(g_acc, label="Generator")
+plt.xlabel("Iterations")
+plt.ylabel("Accuracy")
+plt.legend()
+plt.show()
+
+# Here we can visualize the improvements of the DCGAN network output over time. As the generator
+# continues to learn how to trick the discriminator every iteration, the look of the images will
+# improve as they become harder and harder for the discriminator to distinguish from real images.
+
 # Plot changing fake images over time
-fig = plt.figure(figsize=(8,8))
+fig = plt.figure(figsize=(1,1))
 plt.axis("off")
 ims = [[plt.imshow(np.transpose(i, (1,2,0)), animated=True)] for i in img_list]
-ani = animation.ArtistAnimation(fig, ims, interval=1000, repeat_delay=1000, blit=True)
+ani = animation.ArtistAnimation(fig, ims, interval=34, repeat_delay=1000, repeat=True, blit=True)
+HTML(ani.to_jshtml())
+
+# Finally, a comparison of our finalized output images to the real images we provided to the model
+# as training data.
 
 # Plot real images
 plt.figure(figsize=(15, 15))
@@ -207,7 +241,7 @@ plt.imshow(np.transpose(vutils.make_grid(real_batch[0].to(device)[:64], padding=
 # Plot fake images
 plt.subplot(1, 2, 2)
 plt.axis("off")
-plt.title("Fakse Images")
+plt.title("Fake Images")
 plt.imshow(np.transpose(img_list[-1], (1, 2, 0)))
 
 plt.show()
