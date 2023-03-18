@@ -1,3 +1,3 @@
-# ENEL645A2
+# ENEL645 Course Project #
 
-A Deep Convolutional Generative Adversarial Network (DC-GAN) tutorial for ENEL645 Assignment 2.
+Object recognition in images.
