@@ -18,8 +18,6 @@ import os
 import ultralytics
 from ultralytics import YOLO
 
-import tkinter as tk
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 def pretrained():
     alexnet = models.alexnet(weights=True)
@@ -278,10 +276,14 @@ def object_detection():
 def yolo():
     model = YOLO("yolov8n.pt")
 
-    img_path = "./data/dog.jpg"
-    
-    #results = model.predict(img_path)
+    #print(type(model.model)) # <class 'ultralytics.nn.tasks.DetectionModel'>
+    #print(model.model) # Print model summary
 
+    #for k, v in model.model.named_parameters():
+    #    #print(type(k))
+    #    #print(k)
+    #    print(type(v))
+    
     print("Starting training...")
 
     results = model.train(
@@ -294,7 +296,11 @@ def yolo():
 
     print("Training finished!")
 
+    print("Starting prediction...")
+
+    img_path = "./datasets/data/pothole/test.jpg"
     img = cv2.imread(img_path)
+    results = model.predict(img_path)
 
     for i in range(len(results[0].boxes.xyxy)):
         p0 = (int(results[0].boxes.xyxy[i][0]), int(results[0].boxes.xyxy[i][1]))
@@ -307,6 +313,8 @@ def yolo():
         for c in r.boxes.cls:
             print(model.names[int(c)])
 
-    print(model.names)
+    print("Prediction finished!")
+
+    #print(model.names)
 
 yolo()
