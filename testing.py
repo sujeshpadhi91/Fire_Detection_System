@@ -289,7 +289,7 @@ def yolo():
     results = model.train(
         data='./data/pothole/pothole.yaml',
         imgsz=1280,
-        epochs=2,
+        epochs=50,
         batch=8,
         name='yolov8n_2e'
     )
@@ -307,14 +307,16 @@ def yolo():
         p1 = (int(results[0].boxes.xyxy[i][2]), int(results[0].boxes.xyxy[i][3]))
         cv2.rectangle(img, p0, p1, color=(0), thickness=3)
 
+    print("Saving output image.")
     cv2.imwrite('test.jpg', img)
 
+    print("Classes found:")
     for r in results:
         for c in r.boxes.cls:
             print(model.names[int(c)])
 
     print("Prediction finished!")
 
-    #print(model.names)
+if __name__ == '__main__':
 
-yolo()
+    yolo()
