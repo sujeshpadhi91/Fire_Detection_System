@@ -141,18 +141,20 @@ def train_yolo():
     results = model.train(
         data='./datasets/fire/fire.yaml',
         imgsz=1280,
-        epochs=50,
+        epochs=10,
         batch=8,
-        name='yolov8n_50e'
+        name='yolov8n_10e'
     )
 
     print("Training finished!")
 
-def test_yolo(model):
+def test_yolo():
     
     print("Starting prediction...")
 
-    img_path = "./datasets/fire/test.jpg"
+    model = YOLO("./runs/detect/yolov8n_10e/weights/best.pt")
+
+    img_path = "./datasets/fire/test/images/small_(325).jpg"
     img = cv2.imread(img_path)
     results = model.predict(img_path)
 
@@ -176,5 +178,5 @@ if __name__ == '__main__':
     #rewrite_xml_to_txt()
     #train_valid_test_split()
     #preprocess()
-    train_yolo()
-    #test_yolo()
+    #train_yolo()
+    test_yolo()
