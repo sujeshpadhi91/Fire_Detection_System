@@ -5,19 +5,20 @@ import torchvision
 from torchvision import models, transforms, datasets
 
 import torchvision.transforms as T
+import torchvision.transforms.functional as F
 
 from PIL import Image
 import matplotlib.pyplot as plt
 
 import cv2
-
 import time
 import os
+import numpy as np
+from bs4 import BeautifulSoup
 
 #from IPython import display
 import ultralytics
 from ultralytics import YOLO
-
 
 def pretrained():
     alexnet = models.alexnet(weights=True)
@@ -272,51 +273,3 @@ def object_detection():
         plt.show()
 
     object_detection_api(model, './data/people2.jpg', threshold=0.8)
-
-def yolo():
-    model = YOLO("yolov8n.pt")
-
-    #print(type(model.model)) # <class 'ultralytics.nn.tasks.DetectionModel'>
-    #print(model.model) # Print model summary
-
-    #for k, v in model.model.named_parameters():
-    #    #print(type(k))
-    #    #print(k)
-    #    print(type(v))
-    
-    print("Starting training...")
-
-    results = model.train(
-        data='./data/pothole/pothole.yaml',
-        imgsz=1280,
-        epochs=50,
-        batch=8,
-        name='yolov8n_2e'
-    )
-
-    print("Training finished!")
-
-    print("Starting prediction...")
-
-    img_path = "./datasets/data/pothole/test.jpg"
-    img = cv2.imread(img_path)
-    results = model.predict(img_path)
-
-    for i in range(len(results[0].boxes.xyxy)):
-        p0 = (int(results[0].boxes.xyxy[i][0]), int(results[0].boxes.xyxy[i][1]))
-        p1 = (int(results[0].boxes.xyxy[i][2]), int(results[0].boxes.xyxy[i][3]))
-        cv2.rectangle(img, p0, p1, color=(0), thickness=3)
-
-    print("Saving output image.")
-    cv2.imwrite('test.jpg', img)
-
-    print("Classes found:")
-    for r in results:
-        for c in r.boxes.cls:
-            print(model.names[int(c)])
-
-    print("Prediction finished!")
-
-if __name__ == '__main__':
-
-    yolo()
