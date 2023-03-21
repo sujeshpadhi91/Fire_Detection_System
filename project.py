@@ -131,7 +131,7 @@ def preprocess():
     #print(batch_t.shape)
 
 def train_yolo():
-    model = YOLO("yolov8n.pt")
+    model = YOLO("./runs/detect/yolov8n_50e2/weights/best.pt")
 
     #print(type(model.model)) # <class 'ultralytics.nn.tasks.DetectionModel'>
     #print(model.model) # Print model summary
@@ -141,9 +141,9 @@ def train_yolo():
     results = model.train(
         data='./datasets/fire/fire.yaml',
         imgsz=1280,
-        epochs=10,
+        epochs=75,
         batch=8,
-        name='yolov8n_10e'
+        name='yolov8n_4'
     )
 
     print("Training finished!")
@@ -152,9 +152,9 @@ def test_yolo():
     
     print("Starting prediction...")
 
-    model = YOLO("./runs/detect/yolov8n_10e/weights/best.pt")
+    model = YOLO("./runs/detect/yolov8n_50e/weights/best.pt")
 
-    img_path = "./datasets/fire/test/images/small_(325).jpg"
+    img_path = "./datasets/fire/test/images/large_(106).jpg"
     img = cv2.imread(img_path)
     results = model.predict(img_path)
 
@@ -178,5 +178,5 @@ if __name__ == '__main__':
     #rewrite_xml_to_txt()
     #train_valid_test_split()
     #preprocess()
-    #train_yolo()
-    test_yolo()
+    train_yolo()
+    #test_yolo()
