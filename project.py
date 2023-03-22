@@ -131,7 +131,7 @@ def preprocess():
     #print(batch_t.shape)
 
 def train_yolo():
-    model = YOLO("./runs/detect/yolov8n_50e2/weights/best.pt")
+    model = YOLO("./runs/detect/yolov8n_4/weights/best.pt")
 
     #print(type(model.model)) # <class 'ultralytics.nn.tasks.DetectionModel'>
     #print(model.model) # Print model summary
@@ -143,7 +143,7 @@ def train_yolo():
         imgsz=1280,
         epochs=75,
         batch=8,
-        name='yolov8n_4'
+        name='yolov8n_5'
     )
 
     print("Training finished!")
