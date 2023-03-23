@@ -10,34 +10,48 @@ import torchvision.transforms.functional as F
 from PIL import Image
 import matplotlib.pyplot as plt
 
-import cv2
+#import cv2
 import time
 import os
 import numpy as np
 from bs4 import BeautifulSoup
 
 #from IPython import display
-import ultralytics
-from ultralytics import YOLO
+#import ultralytics
+#from ultralytics import YOLO
+
+import urllib.request
+import zipfile
+import io
+import pandas as pd
+
+
 
 def rewrite_xml_to_txt():
 
-    # Get all the xml label files in the dataset
-    path = "./datasets/fire/labels"
-    labels = [os.path.join(path, file)
-              for file in os.listdir(path)
-              if file.endswith('.xml')]
-    
+    # Get all the xml label files into a list
+    og_label_path = "./datasets/fire/labels"
+    list_of_xml_label_files = [os.path.join(og_label_path, file)
+    for file in os.listdir(og_label_path)
+        if file.endswith('.xml')]
+
     # Read the bounding box data from the xml files, normalize it, and rewrite as txt files
-    for file in labels:
-        data = open(file, 'r').read()
+
+    text_labels_path = og_label_path + "/text_labels"
+    if not os.path.exists(text_labels_path):
+        os.mkdir(text_labels_path)
+
+    for xml_file in list_of_xml_label_files:
+        data = open(xml_file, 'r').read()
         bs_data = BeautifulSoup(data, "xml")
         bs_bndbox = bs_data.find_all('bndbox')
 
-        name = bs_data.find('filename').string
-
+        filename = bs_data.find('filename').string
+        #print(filename)
         width = bs_data.find('width').string
+        #print(width)
         height = bs_data.find('height').string
+        #print(height)
 
         boxes = list()
         for box in bs_bndbox:
@@ -52,32 +66,103 @@ def rewrite_xml_to_txt():
 
             ymax = box.find('ymax').string
             ymax = float(ymax) / float(height)
-
+            
             boxes.append("0 " + str(xmin) + " " + str(ymin) + " " + str(xmax) + " " + str(ymax))
-
-        path2 = path + "/" + name[:-4] + ".txt"
-        out = open(path2, "w")
+    
+        #text_file_path = path + "/" + filename[:-4] + ".txt"
+        text_file_path = text_labels_path + "/" + filename[:-4] + ".txt"
+        out = open(text_file_path, "w")
 
         for box in boxes:
             out.write(box + "\n")
 
+def dataset_extraction_and_label_correction():
+    # URL of the ZIP file
+    #zip_url = 'http://archive.ics.uci.edu/ml/machine-learning-databases/00331/sentiment%20labelled%20sentences.zip'
+    #zip_url = 'https://drive.google.com/drive/shared-with-me/ENEL645/Fire+Data/fire.zip'
+
+    # Download the ZIP file
+    #response = urllib.request.urlopen(zip_url)
+
+    # Extract the contents of the ZIP file to memory
+    #zip_contents = io.BytesIO(response.read())
+    #print(zip_contents)
+    #zip_file = zipfile.ZipFile(zip_contents)
+    zip_file = zipfile.ZipFile('./datasets/fire.zip', 'r')
+    zip_file.extractall('./datasets')
+    print("Dataset Extraction Complete.")
+    #print(zip_file.namelist())
+    #zip_file.printdir()
+    
+    ## Get all the xml label files into a list
+    xml_label_path = zip_file.namelist()
+    list_of_xml_label_files = [os.path.join('./datasets/',file) for file in xml_label_path if file.endswith('.xml')]
+    #(list_of_xml_label_files)
+    #print(len(list_of_xml_label_files))
+    
+    ## Read the bounding box data from the xml files, normalize it, and rewrite as txt files
+
+    text_labels_path = "./datasets/fire/labels/text_labels"
+    if not os.path.exists(text_labels_path):
+        os.mkdir(text_labels_path)
+        print("Text Labels Folder Created.")
+
+    for xml_file in list_of_xml_label_files:
+        data = open(xml_file, 'r').read()
+        bs_data = BeautifulSoup(data, "xml")
+        bs_bndbox = bs_data.find_all('bndbox')
+
+        filename = bs_data.find('filename').string
+        #print(filename)
+        width = bs_data.find('width').string
+        #print(width)
+        height = bs_data.find('height').string
+        #print(height)
+
+        boxes = list()
+        for box in bs_bndbox:
+            xmin = box.find('xmin').string
+            xmin = float(xmin) / float(width)
+
+            ymin = box.find('ymin').string
+            ymin = float(ymin) / float(height)
+
+            xmax = box.find('xmax').string
+            xmax = float(xmax) / float(width)
+
+            ymax = box.find('ymax').string
+            ymax = float(ymax) / float(height)
+            
+            boxes.append("0 " + str(xmin) + " " + str(ymin) + " " + str(xmax) + " " + str(ymax))
+    
+        #text_file_path = path + "/" + filename[:-4] + ".txt"
+        text_file_path = text_labels_path + "/" + filename[:-4] + ".txt"
+        out = open(text_file_path, "w")
+
+        for box in boxes:
+            out.write(box + "\n")
+    print("XML labels to Text labels Conversion Complete")
+
+
 def train_valid_test_split():
 
     # Get images dataset filepath
-    path = "./datasets/fire/images/"
+    images_path = "./datasets/fire/images/"
 
     # Get list of images in dataset
-    names = [file for file in os.listdir(path)]
+    image_names = [file for file in os.listdir(images_path)]
 
     # Split dataset into test, valid, and train subsets
     generator = torch.Generator().manual_seed(0)
-    subsets = torch.utils.data.random_split(dataset=names, lengths=[0.1, 0.1, 0.8], generator=generator)
-
+    #print("Generator\n",generator)
+    subsets = torch.utils.data.random_split(dataset=image_names, lengths=[0.1, 0.1, 0.8], generator=generator)
+    #print("\nSubsets Object\n",subsets)
+    
     # Assign to test, valid, and train subsets
     test = subsets[0]
     valid = subsets[1]
     train = subsets[2]
-
+    
     # Move the randomized subsets to their appropriate places
     for file in test:
         name = file[:-4]
@@ -175,8 +260,13 @@ def test_yolo():
 
 if __name__ == '__main__':
 
+    # Step 1: Extract the downloaded dataset to prepare the data and labels
     #rewrite_xml_to_txt()
-    #train_valid_test_split()
+    #dataset_extraction_and_label_correction()
+
+    #Step 2: Split the data into 3 datasets - Training, Validation and Testing
+    train_valid_test_split()
+
     #preprocess()
-    train_yolo()
+    #train_yolo()
     #test_yolo()
