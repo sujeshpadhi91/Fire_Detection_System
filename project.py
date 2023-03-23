@@ -77,68 +77,86 @@ def rewrite_xml_to_txt():
             out.write(box + "\n")
 
 def dataset_extraction_and_label_correction():
-    # URL of the ZIP file
-    #zip_url = 'http://archive.ics.uci.edu/ml/machine-learning-databases/00331/sentiment%20labelled%20sentences.zip'
-    #zip_url = 'https://drive.google.com/drive/shared-with-me/ENEL645/Fire+Data/fire.zip'
 
-    # Download the ZIP file
-    #response = urllib.request.urlopen(zip_url)
-
-    # Extract the contents of the ZIP file to memory
-    #zip_contents = io.BytesIO(response.read())
-    #print(zip_contents)
-    #zip_file = zipfile.ZipFile(zip_contents)
-    zip_file = zipfile.ZipFile('./datasets/fire.zip', 'r')
-    zip_file.extractall('./datasets')
-    print("Dataset Extraction Complete.")
+    # Extract the zipped dataset into local computer
+    zip_file = zipfile.ZipFile('./datasets/fire.zip', 'r')    
+    if not os.path.exists('./datasets/fire'):
+        zip_file.extractall('./datasets')
+    #print("Dataset Extraction Complete.")
+    #print(zip_file,"\n")
     #print(zip_file.namelist())
     #zip_file.printdir()
     
-    ## Get all the xml label files into a list
+    # Get all the xml label files from the dataset into a list
     xml_label_path = zip_file.namelist()
     list_of_xml_label_files = [os.path.join('./datasets/',file) for file in xml_label_path if file.endswith('.xml')]
     #(list_of_xml_label_files)
     #print(len(list_of_xml_label_files))
     
-    ## Read the bounding box data from the xml files, normalize it, and rewrite as txt files
-
+    # Create the text_labels from xml
     text_labels_path = "./datasets/fire/labels/text_labels"
     if not os.path.exists(text_labels_path):
         os.mkdir(text_labels_path)
         print("Text Labels Folder Created.")
 
+    # Read the bounding box data from the xml files, normalize it, and rewrite as txt files
+    
     for xml_file in list_of_xml_label_files:
+        # Open the file and parse the xml data
         data = open(xml_file, 'r').read()
         bs_data = BeautifulSoup(data, "xml")
-        bs_bndbox = bs_data.find_all('bndbox')
-
+        
+        # Save the file name
         filename = bs_data.find('filename').string
         #print(filename)
+        
+        # Save the image width, height
         width = bs_data.find('width').string
         #print(width)
         height = bs_data.find('height').string
         #print(height)
 
+        # Find all objects labeled in image
+        bs_obj = bs_data.findAll('object')
+        
+        # Loop through each object in the image
         boxes = list()
-        for box in bs_bndbox:
-            xmin = box.find('xmin').string
-            xmin = float(xmin) / float(width)
+        for obj in bs_obj:
+            # Check if the object is fire, if not skip it
+            obj_name = obj.find('name').string
+            if obj_name != 'fire':
+                continue
+            #print(obj_name)
 
-            ymin = box.find('ymin').string
-            ymin = float(ymin) / float(height)
+            # Get the bounding box data for this object's label
+            bs_bndbox = bs_data.find_all('bndbox')
+            for box in bs_bndbox:
+                xmin = box.find('xmin').string
+                xmin = float(xmin) / float(width)
 
-            xmax = box.find('xmax').string
-            xmax = float(xmax) / float(width)
+                ymin = box.find('ymin').string
+                ymin = float(ymin) / float(height)
 
-            ymax = box.find('ymax').string
-            ymax = float(ymax) / float(height)
-            
-            boxes.append("0 " + str(xmin) + " " + str(ymin) + " " + str(xmax) + " " + str(ymax))
+                xmax = box.find('xmax').string
+                xmax = float(xmax) / float(width)
+
+                ymax = box.find('ymax').string
+                ymax = float(ymax) / float(height)
+                
+                center_x = (xmin + xmax) / 2.0      # Calc center of box x coord
+                center_y = (ymin + ymax) / 2.0      # Calc center of box y coord
+
+                box_width = xmax - xmin             # Calc box width
+                box_height = ymax - ymin            # Calc box height
+
+            #boxes.append("0 " + str(xmin) + " " + str(ymin) + " " + str(xmax) + " " + str(ymax))
+            boxes.append("0 " + str(center_x) + " " + str(center_y) + " " + str(box_width) + " " + str(box_height))
     
-        #text_file_path = path + "/" + filename[:-4] + ".txt"
+        # Get a path to save the text file output
         text_file_path = text_labels_path + "/" + filename[:-4] + ".txt"
         out = open(text_file_path, "w")
-
+        
+        # Write all the box labels to the text file
         for box in boxes:
             out.write(box + "\n")
     print("XML labels to Text labels Conversion Complete")
@@ -329,12 +347,12 @@ if __name__ == '__main__':
 
     # Step 1: Extract the downloaded dataset to prepare the data and corresponding labels
     #rewrite_xml_to_txt()
-    dataset_extraction_and_label_correction()
+    #dataset_extraction_and_label_correction()
 
     #Step 2: Split the data into 3 datasets - Training, Validation and Testing
     #train_valid_test_split()
-    train_valid_test_stratified_split()
+    #train_valid_test_stratified_split()
 
-    #preprocess()
+    preprocess()
     #train_yolo()
     #test_yolo()
