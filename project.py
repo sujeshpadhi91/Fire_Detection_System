@@ -24,8 +24,8 @@ import urllib.request
 import zipfile
 import io
 import pandas as pd
-
-
+import random
+import shutil
 
 def rewrite_xml_to_txt():
 
@@ -143,7 +143,6 @@ def dataset_extraction_and_label_correction():
             out.write(box + "\n")
     print("XML labels to Text labels Conversion Complete")
 
-
 def train_valid_test_split():
 
     # Get images dataset filepath
@@ -178,6 +177,74 @@ def train_valid_test_split():
         name = file[:-4]
         os.rename(path + file, "./datasets/fire/train/images/" + file)
         os.rename("./datasets/fire/labels/" + name + ".txt", "./datasets/fire/train/labels/" + name + ".txt")
+
+def train_valid_test_stratified_split():
+
+    # Get images dataset filepath
+    images_path = "./datasets/fire/images/"
+
+    # Get list of images in dataset
+    image_names = [file for file in os.listdir(images_path)]
+    #print(image_names)
+      
+    # Using Stratified Sampling to split images into Training, Validation, and Testing subsets
+    training_filenames = []
+    validation_filenames = []
+    testing_filenames = []
+
+    total_image_count = len(image_names)
+    random.shuffle(image_names)
+    training_filenames.extend(image_names[:int(total_image_count*0.8)])
+    validation_filenames.extend(image_names[int(total_image_count*0.8):int(total_image_count*0.9)])
+    testing_filenames.extend(image_names[int(total_image_count*0.9):])
+    print(len(training_filenames),len(validation_filenames),len(testing_filenames))
+    print(training_filenames,validation_filenames,testing_filenames)
+    
+     #Create the Training - Validation - Testing dataset folders
+    if not os.path.exists(images_path[:-8]+"/train"):
+        os.mkdir(images_path[:-8]+"/train/")
+        if not os.path.exists(images_path[:-8]+"/train/images"):
+            os.mkdir(images_path[:-8]+"/train/images")
+            os.mkdir(images_path[:-8]+"/train/labels")
+        print("Training Dataset Folder Created.")
+    
+    if not os.path.exists(images_path[:-8]+"/val"):
+        os.mkdir(images_path[:-8]+"/val/")
+        if not os.path.exists(images_path[:-8]+"/val/images"):
+            os.mkdir(images_path[:-8]+"/val/images")
+            os.mkdir(images_path[:-8]+"/val/labels")
+        print("Validation Dataset Folder Created.")
+
+    if not os.path.exists(images_path[:-8]+"/test"):
+        os.mkdir(images_path[:-8]+"/test/")
+        if not os.path.exists(images_path[:-8]+"/test/images"):
+            os.mkdir(images_path[:-8]+"/test/images")
+            os.mkdir(images_path[:-8]+"/test/labels")
+        print("Testing Dataset Folder Created.")
+    
+    # Create the respective data for Training - Validation - Testing in the dataset folders
+    for file in training_filenames:
+        name = file[:-4]
+        #os.rename(images_path + file, "./datasets/fire/train/images/" + file)
+        #os.rename("./datasets/fire/labels/text_labels/" + name + ".txt", "./datasets/fire/train/labels/" + name + ".txt")
+        shutil.copy(images_path + file, "./datasets/fire/train/images/" + file)
+        shutil.copy("./datasets/fire/labels/text_labels/" + name + ".txt", "./datasets/fire/train/labels/" + name + ".txt")
+
+    for file in validation_filenames:
+        name = file[:-4]
+        #os.rename(images_path + file, "./datasets/fire/val/images/" + file)
+        #os.rename("./datasets/fire/labels/text_labels/" + name + ".txt", "./datasets/fire/val/labels/" + name + ".txt")
+        shutil.copy(images_path + file, "./datasets/fire/val/images/" + file)
+        shutil.copy("./datasets/fire/labels/text_labels/" + name + ".txt", "./datasets/fire/val/labels/" + name + ".txt")
+
+    for file in testing_filenames:
+        name = file[:-4]
+        #os.rename(images_path + file, "./datasets/fire/test/images/" + file)
+        #os.rename("./datasets/fire/labels/text_labels/" + name + ".txt", "./datasets/fire/test/labels/" + name + ".txt")
+        shutil.copy(images_path + file, "./datasets/fire/test/images/" + file)
+        shutil.copy("./datasets/fire/labels/text_labels/" + name + ".txt", "./datasets/fire/test/labels/" + name + ".txt")
+
+
 
 def preprocess():
 
@@ -260,12 +327,13 @@ def test_yolo():
 
 if __name__ == '__main__':
 
-    # Step 1: Extract the downloaded dataset to prepare the data and labels
+    # Step 1: Extract the downloaded dataset to prepare the data and corresponding labels
     #rewrite_xml_to_txt()
-    #dataset_extraction_and_label_correction()
+    dataset_extraction_and_label_correction()
 
     #Step 2: Split the data into 3 datasets - Training, Validation and Testing
-    train_valid_test_split()
+    #train_valid_test_split()
+    train_valid_test_stratified_split()
 
     #preprocess()
     #train_yolo()
