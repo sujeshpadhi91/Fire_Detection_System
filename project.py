@@ -289,7 +289,7 @@ def train_yolo():
     #model = YOLO("yolov8n.pt")
 
     # All subsequent runs would be using he last best model
-    model = YOLO("./runs/detect/yolov8n_train2_epoch10/weights/best.pt")
+    model = YOLO("./runs/detect/yolov8n_train3_epoch100_batchsize8/weights/best.pt")
         
     #print(type(model.model)) # <class 'ultralytics.nn.tasks.DetectionModel'>
     #print(model.model) # Print model summary
@@ -299,9 +299,9 @@ def train_yolo():
     results = model.train(
         data='./datasets/fire/fire.yaml',
         imgsz=1280,
-        epochs=10,
-        batch=8,
-        name='yolov8n_train3_epoch100'
+        epochs=1,
+        batch=16,
+        name='yolov8n_train4_epoch1_batchsize16'
     )
 
     print("Training finished!")
