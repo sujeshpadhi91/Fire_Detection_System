@@ -290,7 +290,7 @@ def train_yolo():
 
     # All subsequent runs would be using he last best model
     model = YOLO("./runs/detect/yolov8n_train3_epoch100_batchsize8/weights/best.pt")
-        
+    
     #print(type(model.model)) # <class 'ultralytics.nn.tasks.DetectionModel'>
     #print(model.model) # Print model summary
 
@@ -300,8 +300,8 @@ def train_yolo():
         data='./datasets/fire/fire.yaml',
         imgsz=1280,
         epochs=1,
-        batch=16,
-        name='yolov8n_train4_epoch1_batchsize16'
+        batch=10,
+        name='yolov8n_train5_epoch1_batchsize10'
     )
 
     print("Training finished!")
@@ -311,24 +311,41 @@ def test_yolo():
     
     print("Starting prediction...")
 
-    model = YOLO("./runs/detect/yolov8n_50e/weights/best.pt")
+    # Load current best model
+    model = YOLO("./runs/detect/yolov8n_train3_epoch100_batchsize8/weights/best.pt")
 
-    img_path = "./datasets/fire/test/images/large_(106).jpg"
-    img = cv2.imread(img_path)
-    results = model.predict(img_path)
+    # Path to images in testing dataset
+    image_path = "./datasets/fire/test/images/"
+    names = [file for file in os.listdir(image_path)]
+    #print(names)
+    #print(type(names))
 
-    for i in range(len(results[0].boxes.xyxy)):
-        p0 = (int(results[0].boxes.xyxy[i][0]), int(results[0].boxes.xyxy[i][1]))
-        p1 = (int(results[0].boxes.xyxy[i][2]), int(results[0].boxes.xyxy[i][3]))
-        cv2.rectangle(img, p0, p1, color=(0), thickness=3)
+    ## Load a test image from custom dataset
+    #image_path = "./datasets/fire/test/images/middle_(4608).jpg"
+    #image_path = ["./datasets/fire/test/images/middle_(4608).jpg"]
 
-    print("Saving output image.")
-    cv2.imwrite('test.jpg', img)
+    for image in names:
+        img = cv2.imread(image_path+image)
+        
+        # Use model to predict fire position in image (if any)
+        results = model.predict(img)
 
-    print("Classes found:")
-    for r in results:
-        for c in r.boxes.cls:
-            print(model.names[int(c)])
+        # Get the bounding box data from the results and draw it onto an image
+        for i in range(len(results[0].boxes.xyxy)):
+            p0 = (int(results[0].boxes.xyxy[i][0]), int(results[0].boxes.xyxy[i][1]))
+            p1 = (int(results[0].boxes.xyxy[i][2]), int(results[0].boxes.xyxy[i][3]))
+            cv2.rectangle(img, p0, p1, color=(0,0,255), thickness=5) #color format = (B,G,R)
+
+        # Save a copy of the results
+        print("Saving output image.")
+        tested_filename = ''.join('./predictions/tested_'+image)
+        cv2.imwrite(tested_filename, img)
+
+        print("Classes found:")
+        for r in results:
+            for c in r.boxes.cls:
+                print(model.names[int(c)])
+    
 
     print("Prediction finished!")
 
@@ -361,5 +378,5 @@ if __name__ == '__main__':
     ###SECTION B: This is used for Training and Testing the model
     #############################################################
 
-    train_yolo()
-    #test_yolo()
+    #train_yolo()
+    test_yolo()
