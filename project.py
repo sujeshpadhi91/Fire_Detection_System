@@ -10,20 +10,20 @@ import torchvision.transforms.functional as F
 from PIL import Image
 import matplotlib.pyplot as plt
 
-#import cv2
+import cv2
 import time
 import os
 import numpy as np
 from bs4 import BeautifulSoup
 
 #from IPython import display
-#import ultralytics
-#from ultralytics import YOLO
+import ultralytics
+from ultralytics import YOLO
 
-import urllib.request
+#import urllib.request
 import zipfile
 import io
-import pandas as pd
+#import pandas as pd
 import random
 import shutil
 
@@ -215,8 +215,8 @@ def train_valid_test_stratified_split():
     training_filenames.extend(image_names[:int(total_image_count*0.8)])
     validation_filenames.extend(image_names[int(total_image_count*0.8):int(total_image_count*0.9)])
     testing_filenames.extend(image_names[int(total_image_count*0.9):])
-    print(len(training_filenames),len(validation_filenames),len(testing_filenames))
-    print(training_filenames,validation_filenames,testing_filenames)
+    #print(len(training_filenames),len(validation_filenames),len(testing_filenames))
+    #print(training_filenames,validation_filenames,testing_filenames)
     
      #Create the Training - Validation - Testing dataset folders
     if not os.path.exists(images_path[:-8]+"/train"):
@@ -226,11 +226,11 @@ def train_valid_test_stratified_split():
             os.mkdir(images_path[:-8]+"/train/labels")
         print("Training Dataset Folder Created.")
     
-    if not os.path.exists(images_path[:-8]+"/val"):
-        os.mkdir(images_path[:-8]+"/val/")
-        if not os.path.exists(images_path[:-8]+"/val/images"):
-            os.mkdir(images_path[:-8]+"/val/images")
-            os.mkdir(images_path[:-8]+"/val/labels")
+    if not os.path.exists(images_path[:-8]+"/valid"):
+        os.mkdir(images_path[:-8]+"/valid/")
+        if not os.path.exists(images_path[:-8]+"/valid/images"):
+            os.mkdir(images_path[:-8]+"/valid/images")
+            os.mkdir(images_path[:-8]+"/valid/labels")
         print("Validation Dataset Folder Created.")
 
     if not os.path.exists(images_path[:-8]+"/test"):
@@ -262,47 +262,35 @@ def train_valid_test_stratified_split():
         shutil.copy(images_path + file, "./datasets/fire/test/images/" + file)
         shutil.copy("./datasets/fire/labels/text_labels/" + name + ".txt", "./datasets/fire/test/labels/" + name + ".txt")
 
-
-
 def preprocess():
 
-    """
-    class SquarePad:
-        def __call__(self, image):
-            w, h = image.size
-            max_wh = np.max([w, h])
-            hp = int((max_wh - w) / 2)
-            vp = int((max_wh - h) / 2)
-            padding = (hp, vp, hp, vp)
-            return F.pad(image, padding, 0, 'constant')
-    """
+    # Path to images in dataset
+    image_path = "./datasets/fire/images/"
+    names = [file for file in os.listdir(image_path)]
 
+    # Define transforms for data
     image_size = 1280
     transform = transforms.Compose([
         transforms.Resize((image_size, image_size)),
-        transforms.CenterCrop(1280),
-        transforms.ToTensor(),
-        transforms.Normalize(
-            mean=[0.485, 0.456, 0.406],
-            std=[0.229, 0.224, 0.225]
-        )
+        transforms.CenterCrop(1280)
     ])
 
-    path = "./datasets/fire/"
-    images = datasets.ImageFolder(root=path, transform=transform)
-
-    print(len(images))
-
-    #transform = T.ToPILImage()
-    #img = transform(images[0][0])
-    #img.save("test.jpg")
-
-    #batch_t = torch.unsqueeze(img_t, 0)
-    #print(batch_t.shape)
+    # Transform and save the transformed images back into the dataset
+    print("Image Transformation under progress ...")
+    for file in names:
+        img = Image.open(image_path + file)
+        img_t = transform(img)
+        img_t.save(image_path + file)
+    print("Image Transformation Complete")
 
 def train_yolo():
-    model = YOLO("./runs/detect/yolov8n_50e2/weights/best.pt")
+    
+    # For the first run use the below weights to implement Transfer Learning
+    #model = YOLO("yolov8n.pt")
 
+    # All subsequent runs would be using he last best model
+    model = YOLO("./runs/detect/yolov8n_train2_epoch10/weights/best.pt")
+        
     #print(type(model.model)) # <class 'ultralytics.nn.tasks.DetectionModel'>
     #print(model.model) # Print model summary
 
@@ -311,12 +299,13 @@ def train_yolo():
     results = model.train(
         data='./datasets/fire/fire.yaml',
         imgsz=1280,
-        epochs=75,
+        epochs=10,
         batch=8,
-        name='yolov8n_4'
+        name='yolov8n_train3_epoch100'
     )
 
     print("Training finished!")
+    # Output models are saved in ./runs/detect/<name>/weights/<best.pt/last.pt>
 
 def test_yolo():
     
@@ -345,14 +334,32 @@ def test_yolo():
 
 if __name__ == '__main__':
 
+    print("This is the MAIN")
+    
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print("Device: ",device)
+
+    ########################################################################################################
+    ###SECTION A: This is used once for extraction, pre-processing, splitting and dataloading of the dataset
+    ########################################################################################################
+
+    # The original dataset is here: https://github.com/siyuanwu/DFS-FIRE-SMOKE-Dataset
+    # The custom dataset is here: https://drive.google.com/drive/folders/1Zxwx6fIBil1rG_vFBmO8D7_7j_YATa9f
+
     # Step 1: Extract the downloaded dataset to prepare the data and corresponding labels
-    #rewrite_xml_to_txt()
+    #rewrite_xml_to_txt() #Donot use
     #dataset_extraction_and_label_correction()
 
-    #Step 2: Split the data into 3 datasets - Training, Validation and Testing
-    #train_valid_test_split()
+    # Step 2: Preprocess the images by resizing and center cropping
+    #preprocess()
+
+    # Step 3: Split the data into 3 datasets - Training, Validation and Testing
+    #train_valid_test_split() #Donot use
     #train_valid_test_stratified_split()
 
-    preprocess()
-    #train_yolo()
+    #############################################################
+    ###SECTION B: This is used for Training and Testing the model
+    #############################################################
+
+    train_yolo()
     #test_yolo()
