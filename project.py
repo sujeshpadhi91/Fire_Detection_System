@@ -176,7 +176,7 @@ def train_valid_test_split():
 def train_yolo():
 
     # Load current best model (or just ./yolov8n.pt for a fresh version)
-    model = YOLO("./runs/detect/yolov8n_4/weights/best.pt")
+    model = YOLO("./yolov8n.pt")
 
     # Print model summary (if interested - its long)
     #print(model.model)
@@ -185,9 +185,9 @@ def train_yolo():
     results = model.train(
         data='./datasets/fire/fire.yaml',   # Tells the model where to find the images/labels
         imgsz=1280,                         # Size of images
-        epochs=1,                           # Number of epochs to train
+        epochs=100,                         # Number of epochs to train
         batch=8,                            # Number of images / batch
-        name='yolov8n_test'                 # Output directory name - ./runs/detect/<name>
+        name='yolov8n_0'                    # Output directory name - ./runs/detect/<name>
     )
 
     # Output models are saved in ./runs/detect/<name>/weights/<best.pt/last.pt>
