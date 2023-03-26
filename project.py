@@ -20,7 +20,6 @@ from bs4 import BeautifulSoup
 import ultralytics
 from ultralytics import YOLO
 
-
 # --------------------------- THESE DON'T NEED TO BE RUN AGAIN ----------------
 # Used to test bounding boxes
 def test_box():
@@ -176,7 +175,7 @@ def train_valid_test_split():
 def train_yolo():
 
     # Load current best model (or just ./yolov8n.pt for a fresh version)
-    model = YOLO("./yolov8n.pt")
+    model = YOLO("./runs/detect/yolov8n_1/weights/best.pt")
 
     # Print model summary (if interested - its long)
     #print(model.model)
@@ -187,7 +186,7 @@ def train_yolo():
         imgsz=1280,                         # Size of images
         epochs=100,                         # Number of epochs to train
         batch=8,                            # Number of images / batch
-        name='yolov8n_0'                    # Output directory name - ./runs/detect/<name>
+        name='yolov8n_2'                    # Output directory name - ./runs/detect/<name>
     )
 
     # Output models are saved in ./runs/detect/<name>/weights/<best.pt/last.pt>
