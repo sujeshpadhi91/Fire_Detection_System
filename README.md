@@ -1,1 +1,1 @@
-
+# Object Detection of Fire in Images using YOLOv8 #
