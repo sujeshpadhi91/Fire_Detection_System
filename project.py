@@ -130,7 +130,12 @@ def dataset_extraction_and_label_correction():
     if not os.path.exists('./datasets/fire'):
         zip_file.extractall('./datasets')
 
-    
+    #print("Dataset Extraction Complete.")
+    #print(zip_file,"\n")
+    #print(zip_file.namelist())
+    #zip_file.printdir()
+    #C:\Users\sujes\ENEL645_git_repo\ENEL645A2\datasets\fire\labels\large_(1).xml
+ 
     # Get all the xml label files from the dataset into a list
     xml_label_path = zip_file.namelist()
     list_of_xml_label_files = [os.path.join('./datasets/',file) for file in xml_label_path if file.endswith('.xml')]
@@ -309,14 +314,21 @@ def train_valid_test_stratified_split():
 # ------------------------------------- TRAIN THE MODEL -----------------------
 def train_yolo():
 
+
+    # All subsequent runs would be using he last best model
     # Load current best model (or just ./yolov8n.pt for a fresh version)
     model = YOLO("./runs/detect/yolov8n_1/weights/best.pt")
+    
+    #print(type(model.model)) # <class 'ultralytics.nn.tasks.DetectionModel'>
+    #print(model.model) # Print model summary
+
 
     # Print model summary (if interested - its long)
     #print(model.model)
 
     # Pass training data to model
     results = model.train(
+
         data='./datasets/fire/fire.yaml',   # Tells the model where to find the images/labels
         imgsz=1280,                         # Size of images
         epochs=100,                         # Number of epochs to train
@@ -337,6 +349,33 @@ def test_yolo():
         imgsz=1280,
         batch=8,
     )
+
+    ## Load a test image from custom dataset
+    #image_path = "./datasets/fire/test/images/middle_(4608).jpg"
+    #image_path = ["./datasets/fire/test/images/middle_(4608).jpg"]
+    
+    for image in names:
+        img = cv2.imread(image_path+image)
+        
+        # Use model to predict fire position in image (if any)
+        results = model.predict(img)
+
+        # Get the bounding box data from the results and draw it onto an image
+        for i in range(len(results[0].boxes.xyxy)):
+            p0 = (int(results[0].boxes.xyxy[i][0]), int(results[0].boxes.xyxy[i][1]))
+            p1 = (int(results[0].boxes.xyxy[i][2]), int(results[0].boxes.xyxy[i][3]))
+            cv2.rectangle(img, p0, p1, color=(0,0,255), thickness=5) #color format = (B,G,R)
+
+        # Save a copy of the results
+        print("Saving output image.")
+        tested_filename = ''.join('./predictions/tested_'+image)
+        cv2.imwrite(tested_filename, img)
+
+        print("Classes found:")
+        for r in results:
+            for c in r.boxes.cls:
+                print(model.names[int(c)])
+        
 
 # ------------------------------------- USE THE MODEL ------------------------#
 def predict():
@@ -371,6 +410,7 @@ def predict():
             # Draw bounding box onto image
             #cv2.rectangle(img, p0, p1, color=(0), thickness=3)
 
+
         # Display
         img.show()
 
@@ -393,14 +433,12 @@ if __name__ == '__main__':
     # The custom dataset is here: https://drive.google.com/drive/folders/1Zxwx6fIBil1rG_vFBmO8D7_7j_YATa9f
 
     # Step 1: Extract the downloaded dataset to prepare the data and corresponding labels
-    #rewrite_xml_to_txt() #Donot use
     #dataset_extraction_and_label_correction()
 
     # Step 2: Preprocess the images by resizing and center cropping
     #preprocess()
 
     # Step 3: Split the data into 3 datasets - Training, Validation and Testing
-    #train_valid_test_split() #Donot use
     #train_valid_test_stratified_split()
 
     ################################################################
@@ -410,3 +448,4 @@ if __name__ == '__main__':
     #train_yolo()
     #test_yolo()
     predict()
+
