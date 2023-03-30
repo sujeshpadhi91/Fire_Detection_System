@@ -86,7 +86,7 @@ def dataset_extraction_and_label_correction():
     #print(zip_file,"\n")
     #print(zip_file.namelist())
     #zip_file.printdir()
-    
+    #C:\Users\sujes\ENEL645_git_repo\ENEL645A2\datasets\fire\labels\large_(1).xml
     # Get all the xml label files from the dataset into a list
     xml_label_path = zip_file.namelist()
     list_of_xml_label_files = [os.path.join('./datasets/',file) for file in xml_label_path if file.endswith('.xml')]
@@ -289,7 +289,7 @@ def train_yolo():
     #model = YOLO("yolov8n.pt")
 
     # All subsequent runs would be using he last best model
-    model = YOLO("./runs/detect/yolov8n_train3_epoch100_batchsize8/weights/best.pt")
+    model = YOLO("./runs/detect/yolov8n_train7_epoch100_batchsize8/weights/best.pt")
     
     #print(type(model.model)) # <class 'ultralytics.nn.tasks.DetectionModel'>
     #print(model.model) # Print model summary
@@ -299,9 +299,9 @@ def train_yolo():
     results = model.train(
         data='./datasets/fire/fire.yaml',
         imgsz=1280,
-        epochs=1,
-        batch=10,
-        name='yolov8n_train5_epoch1_batchsize10'
+        epochs=90,
+        batch=8,
+        name='yolov8n_train8_epoch90_batchsize8'
     )
 
     print("Training finished!")
@@ -323,7 +323,7 @@ def test_yolo():
     ## Load a test image from custom dataset
     #image_path = "./datasets/fire/test/images/middle_(4608).jpg"
     #image_path = ["./datasets/fire/test/images/middle_(4608).jpg"]
-
+    
     for image in names:
         img = cv2.imread(image_path+image)
         
@@ -345,7 +345,7 @@ def test_yolo():
         for r in results:
             for c in r.boxes.cls:
                 print(model.names[int(c)])
-    
+        
 
     print("Prediction finished!")
 
@@ -364,14 +364,12 @@ if __name__ == '__main__':
     # The custom dataset is here: https://drive.google.com/drive/folders/1Zxwx6fIBil1rG_vFBmO8D7_7j_YATa9f
 
     # Step 1: Extract the downloaded dataset to prepare the data and corresponding labels
-    #rewrite_xml_to_txt() #Donot use
     #dataset_extraction_and_label_correction()
 
     # Step 2: Preprocess the images by resizing and center cropping
     #preprocess()
 
     # Step 3: Split the data into 3 datasets - Training, Validation and Testing
-    #train_valid_test_split() #Donot use
     #train_valid_test_stratified_split()
 
     #############################################################
@@ -379,4 +377,4 @@ if __name__ == '__main__':
     #############################################################
 
     #train_yolo()
-    test_yolo()
+    #test_yolo()
