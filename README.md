@@ -1,4 +1,14 @@
-﻿The objective of this project is to use transfer learning and use a pre-trained model named YOLOv8 for fire detection from images.
+ENEL645 - Data Mining & Machine Learning
+
+Group 30
+Sujesh Padhi
+Abdelrahman Elnaggar
+Sufiyan Bukhari
+Subroto Kumer Deb Nath
+Aheraz Bin Muslim Mohammad
+Travis Dow
+
+The objective of this project is to use transfer learning and use a pre-trained model named YOLOv8 for fire detection from images.
 
 Steps to Begin:
 
