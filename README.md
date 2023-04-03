@@ -36,6 +36,7 @@ Open the project.py file on your code editor for next steps.
   │   ├── yolov8n_2/ - trained model weigth with validation results are saved here
   │   |── validation/ - testing results are saved here
   |   └── all the directories contain results from various epoch runs
+  ```
 
 ## Artefacts
 
