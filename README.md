@@ -1,6 +1,6 @@
 ## ENEL645 - Data Mining & Machine Learning
 
-## Group 30
+## Group 30 - Fire Detection and Classification System
 
 Sujesh Padhi
 
