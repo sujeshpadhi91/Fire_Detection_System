@@ -1,6 +1,6 @@
-ENEL645 - Data Mining & Machine Learning
+## ENEL645 - Data Mining & Machine Learning
 
-Group 30
+## Group 30
 
 Sujesh Padhi
 
