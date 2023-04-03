@@ -36,3 +36,13 @@ Open the project.py file on your code editor for next steps.
   │   ├── yolov8n_2/ - trained model weigth with validation results are saved here
   │   |── validation/ - testing results are saved here
   |   └── all the directories contain results from various epoch runs
+
+## Artefacts
+
+GitHub Repository – https://github.com/ttdow/ENEL645
+
+Fire Dataset Location – https://drive.google.com/file/d/1JtCrOn2jE1Pdhqru5S9oQ3KVoxECFNSL/view?usp=share_link
+
+Presentation video – https://youtu.be/etBiSHpHKi0
+
+Fire detection video – https://www.youtube.com/watch?v=B8NxlKMXVjU
