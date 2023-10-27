@@ -381,9 +381,21 @@ def test_yolo():
 # ------------------------------------- USE THE MODEL ------------------------#
 def predict(imagefile_received):
 
-    # Load current best model
-    model = YOLO("C:/Users/sujes/FDS_repo/Fire_Detection_System/runs/detect/yolov8n_2/weights/best.pt")
+    # Get the directory where the script is located
+    script_directory = os.path.dirname(os.path.abspath(__file__))
 
+    # Combine the script directory with your relative path
+    relative_processedimage_path = 'images/server/output/fire.jpg'
+    processedimagefile_path = os.path.join(script_directory, relative_processedimage_path)
+
+    relative_model_path = 'runs/detect/yolov8n_2/weights/best.pt'
+    model_path = os.path.join(script_directory, relative_model_path)
+    
+    # Load current best model
+    #model = YOLO("C:/Users/sujes/FDS_repo/Fire_Detection_System/runs/detect/yolov8n_2/weights/best.pt")
+    #model = YOLO("/root/Fire_Detection_System/runs/detect/yolov8n_2/weights/best.pt")
+    model = YOLO(model_path)
+    
     #results = model.predict('C:/Users/sujes/FDS_repo/Fire_Detection_System/images/input')
     results = model.predict(imagefile_received)
     
@@ -473,9 +485,30 @@ if __name__ == '__main__':
     print(server_socket)
 
     print("Connection established with the client:", client_address)
-        
-    imagefile_to_receive = './images/server/input/received_imagefile.jpg'
     
+    #imagefile_to_receive = '/root/Fire_Detection_System/images/server/input/received_imagefile.jpg'
+    # Get the directory where the script is located
+    script_directory = os.path.dirname(os.path.abspath(__file__))
+
+    # Create the server input and output directories if not created
+    server_path = os.path.join(script_directory, 'images/server')
+    if not os.path.exists(server_path):
+        os.mkdir(server_path)
+        print("Server Directory Created.")
+    input_path = os.path.join(script_directory, 'images/server/input')
+    if not os.path.exists(input_path):
+        os.mkdir(input_path)
+        print("Server Input Directory Created.")
+    output_path = os.path.join(script_directory,'images/server/output')
+    if not os.path.exists(output_path):
+        os.mkdir(output_path)
+        print("Server Output Directory Created.")
+
+    #imagefile_to_receive = './images/server/input/received_imagefile.jpg'
+    # Combine the script directory with your relative path
+    relative_path = 'images/server/input/received_image_file.jpg'
+    imagefile_to_receive = os.path.join(script_directory, relative_path)
+
     with open(imagefile_to_receive, 'wb') as file:
         while True:
             data = client_socket.recv(1024)
