@@ -490,7 +490,8 @@ if __name__ == '__main__':
     
     #imagefile_to_receive = '/root/Fire_Detection_System/images/server/input/received_imagefile.jpg'
     # Get the directory where the script is located
-    script_directory = os.path.dirname(os.path.abspath(__file__))
+    #script_directory = os.path.dirname(os.path.abspath(__file__))
+    script_directory = 'C:/Users/sujes/FDS_repo/Fire_Detection_System'
 
     # Create the server input and output directories if not created
     server_path = os.path.join(script_directory, 'images/server')
@@ -508,18 +509,27 @@ if __name__ == '__main__':
 
     #imagefile_to_receive = './images/server/input/received_imagefile.jpg'
     # Combine the script directory with your relative path
-    relative_path = 'images/server/input/received_image_file.jpg'
-    imagefile_to_receive = os.path.join(script_directory, relative_path)
+    server_input_relative_path = 'images/server/input/received_image_file.jpg'
+    imagefile_to_receive = os.path.join(script_directory, server_input_relative_path)
 
     with open(imagefile_to_receive, 'wb') as file:
-        while True:
-            data = client_socket.recv(1024)
-            if not data:
-                break
+        data = client_socket.recv(1024)
+        while data:
             file.write(data)
+            data = client_socket.recv(1024)
     print("The image", imagefile_to_receive, "was received successfully")
     predict(imagefile_to_receive)
     print("The image", imagefile_to_receive, "was processed successfully")
+
+    # Send the image back to the client.
+    server_output_relative_path = 'images/server/output/fire.jpg'
+    imagefile_to_return = os.path.join(script_directory, server_output_relative_path)    
+    with open(imagefile_to_return, "rb") as file:
+        data = file.read()
+        while data:
+            client_socket.send(data)
+            data = file.read(1024)
+    print("The processed image", imagefile_to_return, "was returned successfully")
 
     print("Closing the connection.")
     client_socket.close()
