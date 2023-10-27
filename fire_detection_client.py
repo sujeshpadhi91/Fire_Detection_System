@@ -1,5 +1,6 @@
 #................................CLIENT................................
 import socket
+import os
 
 print("# Create a socket object")
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
