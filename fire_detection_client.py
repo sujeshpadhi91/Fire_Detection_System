@@ -9,7 +9,14 @@ server_address = ('10.0.0.19', 12345)  # Replace with server's IP address
 print("Sending connection request to: ", server_address)
 client_socket.connect(server_address)
 
-imagefile_path = './images/client/input/image_file.jpg'
+# Get the directory where the script is located
+script_directory = os.path.dirname(os.path.abspath(__file__))
+
+# Combine the script directory with your relative path
+relative_path = 'images/client/input/image_file.jpg'
+imagefile_path = os.path.join(script_directory, relative_path)
+
+#imagefile_path = '/root/Fire_Detection_System/images/client/input/image_file.jpg'
 
 with open(imagefile_path, 'rb') as file:
     while True:
