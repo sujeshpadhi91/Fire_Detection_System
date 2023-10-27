@@ -5,7 +5,7 @@ print("# Create a socket object")
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 print("# Connect the socket to the server's address and port")
-server_address = ('10.0.0.19', 12345)  # Replace with server's IP address
+server_address = ('192.168.122.103', 12345)  # Replace with server's IP address
 print("Sending connection request to: ", server_address)
 client_socket.connect(server_address)
 
