@@ -490,8 +490,7 @@ if __name__ == '__main__':
     
     #imagefile_to_receive = '/root/Fire_Detection_System/images/server/input/received_imagefile.jpg'
     # Get the directory where the script is located
-    #script_directory = os.path.dirname(os.path.abspath(__file__))
-    script_directory = 'C:/Users/sujes/FDS_repo/Fire_Detection_System'
+    script_directory = os.path.dirname(os.path.abspath(__file__))
 
     # Create the server input and output directories if not created
     server_path = os.path.join(script_directory, 'images/server')

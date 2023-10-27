@@ -12,8 +12,7 @@ print("Sending connection request to: ", server_address)
 client_socket.connect(server_address)
 
 # Get the directory where the script is located
-#script_directory = os.path.dirname(os.path.abspath(__file__))
-script_directory = 'C:/Users/sujes/FDS_repo/Fire_Detection_System'
+script_directory = os.path.dirname(os.path.abspath(__file__))
 
 # Combine the script directory with your relative path
 client_input_relative_path = 'images/client/input/image_file.jpg'
