@@ -409,7 +409,9 @@ def predict(imagefile_received):
 
         res_plotted = result.plot()
         #cv2.imwrite('test.jpg', res_plotted)
-        cv2.imwrite('C:/Users/sujes/FDS_repo/Fire_Detection_System/images/server/output/fire.jpg', res_plotted)
+        #cv2.imwrite('C:/Users/sujes/FDS_repo/Fire_Detection_System/images/server/output/fire.jpg', res_plotted)
+        #cv2.imwrite('/root/Fire_Detection_System/images/server/output/fire.jpg', res_plotted)
+        cv2.imwrite(processedimagefile_path, res_plotted)
         # break
 
         """
