@@ -379,25 +379,26 @@ def test_yolo():
         
 
 # ------------------------------------- USE THE MODEL ------------------------#
-def predict(imagefile_received):
+def predict(server_input_file_path, server_output_file_path):
 
     # Get the directory where the script is located
-    script_directory = os.path.dirname(os.path.abspath(__file__))
+    # script_directory = os.path.dirname(os.path.abspath(__file__))
 
     # Combine the script directory with your relative path
-    relative_processedimage_path = 'images/server/output/fire.jpg'
-    processedimagefile_path = os.path.join(script_directory, relative_processedimage_path)
+    # relative_processedimage_path = 'images/server/output/fire.jpg'
+    # processedimagefile_path = os.path.join(script_directory, relative_processedimage_path)
 
     relative_model_path = 'runs/detect/yolov8n_2/weights/best.pt'
     model_path = os.path.join(script_directory, relative_model_path)
     
-    # Load current best model
+    # Load the current best model
     #model = YOLO("C:/Users/sujes/FDS_repo/Fire_Detection_System/runs/detect/yolov8n_2/weights/best.pt")
     #model = YOLO("/root/Fire_Detection_System/runs/detect/yolov8n_2/weights/best.pt")
     model = YOLO(model_path)
     
     #results = model.predict('C:/Users/sujes/FDS_repo/Fire_Detection_System/images/input')
-    results = model.predict(imagefile_received)
+    # results = model.predict(imagefile_received)
+    results = model.predict(server_input_file_path)
     
     transform = T.ToPILImage()
 
@@ -411,7 +412,7 @@ def predict(imagefile_received):
         #cv2.imwrite('test.jpg', res_plotted)
         #cv2.imwrite('C:/Users/sujes/FDS_repo/Fire_Detection_System/images/server/output/fire.jpg', res_plotted)
         #cv2.imwrite('/root/Fire_Detection_System/images/server/output/fire.jpg', res_plotted)
-        cv2.imwrite(processedimagefile_path, res_plotted)
+        cv2.imwrite(server_output_file_path, res_plotted)
         # break
 
         """
@@ -442,9 +443,9 @@ if __name__ == '__main__':
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print("Device: ", device)
 
-    ###########################################################################################################
-    ## SECTION A: This is used once for extraction, pre-processing, splitting and dataloading of the dataset ##
-    ###########################################################################################################
+    #############################################################################################################
+    ## SECTION A: This is used once for extraction, pre-processing, splitting, and data loading of the dataset ##
+    #############################################################################################################
 
     # The original dataset is here: https://github.com/siyuanwu/DFS-FIRE-SMOKE-Dataset
     # The custom dataset is here: https://drive.google.com/drive/folders/1Zxwx6fIBil1rG_vFBmO8D7_7j_YATa9f
@@ -470,66 +471,90 @@ if __name__ == '__main__':
     ## SECTION C: This is used for deploying the model on a server ##
     #################################################################
 
-    print("# Create a socket object")
-    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-    print("# Bind the socket to a specific address and port")
     server_address = ('0.0.0.0', 12345)  # Listen on all available network interfaces
-    server_socket.bind(server_address)
-
-    print("# Listen for incoming connections")
-    server_socket.listen(1)
-
-    print("Waiting for a connection...")
-    client_socket, client_address = server_socket.accept()
-
-    print("Server Socket")
-    print(server_socket)
-
-    print("Connection established with the client:", client_address)
-    
     #imagefile_to_receive = '/root/Fire_Detection_System/images/server/input/received_imagefile.jpg'
     # Get the directory where the script is located
     script_directory = os.path.dirname(os.path.abspath(__file__))
 
     # Create the server input and output directories if not created
-    server_path = os.path.join(script_directory, 'images/server')
-    if not os.path.exists(server_path):
-        os.mkdir(server_path)
-        print("Server Directory Created.")
-    input_path = os.path.join(script_directory, 'images/server/input')
-    if not os.path.exists(input_path):
-        os.mkdir(input_path)
-        print("Server Input Directory Created.")
-    output_path = os.path.join(script_directory,'images/server/output')
-    if not os.path.exists(output_path):
-        os.mkdir(output_path)
-        print("Server Output Directory Created.")
+    # server_directory = os.path.join(script_directory, 'images/server')
+    # os.makedirs(server_directory, exist_ok=True)
+    server_input_directory = os.path.join(script_directory, 'images/server_input')
+    os.makedirs(server_input_directory, exist_ok=True)
+    server_output_directory = os.path.join(script_directory,'images/server_output')
+    os.makedirs(server_output_directory, exist_ok=True)
 
-    #imagefile_to_receive = './images/server/input/received_imagefile.jpg'
-    # Combine the script directory with your relative path
-    server_input_relative_path = 'images/server/input/received_image_file.jpg'
-    imagefile_to_receive = os.path.join(script_directory, server_input_relative_path)
+    while(True):
 
-    with open(imagefile_to_receive, 'wb') as file:
-        data = client_socket.recv(1024)
-        while data:
-            file.write(data)
+        # Create a socket object and bind it to the host and port.
+        server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        server_socket.bind(server_address)
+        # Listen for incoming connections (1 connection at a time).
+        server_socket.listen(1)
+
+        print(f"Server is listening on {server_address}...")
+        client_socket, client_address = server_socket.accept()
+
+        print("Server Socket")
+        print(server_socket)
+
+        print("Connection established with the client:", client_address)
+        
+        ###########################################
+        # RECEIVING FROM THE SERVER FOR PROCESSING
+        ###########################################
+        
+        #imagefile_to_receive = './images/server/input/received_imagefile.jpg'
+        # Combine the script directory with your relative path
+        #server_input_relative_path = 'images/server/input/received_image_file.jpg'
+        #imagefile_to_receive = os.path.join(script_directory, server_input_relative_path)
+
+        # temp_data = client_socket.recv(1024)
+        # print('first byte is ', temp_data, ' || and decoded is', temp_data.decode())
+
+        # Receive the filename from the client
+        filename = client_socket.recv(1024).decode()
+        if not filename:
+            break
+        client_socket.send(b"Server has received filename successfully")
+        print("The filename: ", filename, "has been received.")
+
+        server_input_file_path = os.path.join(server_input_directory, f"{filename}")
+        server_output_file_path = os.path.join(server_output_directory, f"{filename}")
+
+        with open(server_input_file_path, 'wb') as file:
             data = client_socket.recv(1024)
-    print("The image", imagefile_to_receive, "was received successfully")
-    predict(imagefile_to_receive)
-    print("The image", imagefile_to_receive, "was processed successfully")
+            # print('first byte is ', data, ' || and decoded is', data.decode("utf-8"))
+            while data:
+                file.write(data)
+                data = client_socket.recv(1024)
+                # data = client_socket.recv(1024)
+                # file.write(data)
+            print("The data reception is complete")
+        print("The image", filename, "was received successfully at ", server_input_file_path)
+        
+        # Send an acknowledgment to the client that the file has been received.
+        client_socket.send(b"Server has received the file successfully")
+        # print("The image", imagefile_to_receive, "was received successfully")
+        
+        # Process the files
+        predict(server_input_file_path, server_output_file_path)
+        print("The image", filename, "was received successfully and stored at ", server_output_file_path)
+   
+        #########################################
+        # SENDING TO THE CLIENT AFTER PROCESSING
+        #########################################
+ 
+        # Send the processed file back to the client.
+        # server_output_relative_path = 'images/server/output/fire.jpg'
+        # imagefile_to_return = os.path.join(script_directory, server_output_relative_path)    
+        with open(server_output_file_path, "rb") as file:
+            data = file.read()
+            while data:
+                client_socket.send(data)
+                data = file.read(1024)
+        print("The image", filename, "was sent successfully from ", server_output_file_path)
 
-    # Send the image back to the client.
-    server_output_relative_path = 'images/server/output/fire.jpg'
-    imagefile_to_return = os.path.join(script_directory, server_output_relative_path)    
-    with open(imagefile_to_return, "rb") as file:
-        data = file.read()
-        while data:
-            client_socket.send(data)
-            data = file.read(1024)
-    print("The processed image", imagefile_to_return, "was returned successfully")
-
-    print("Closing the connection.")
-    client_socket.close()
-    server_socket.close()
+        print("Closing the connection.")
+        client_socket.close()
+        server_socket.close()
